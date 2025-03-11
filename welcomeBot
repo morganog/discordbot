@@ -1,1 +1,60 @@
+import discord
+from discord.ext import commands
 
+# create bot instance
+intents = discord.Intents.default()
+intents.members = True # tracks new member joins
+waffle_bot = commands.bot(command_prefix="!", intents=intents)
+
+# to-do list
+todo_list = """
+**Welcome to the Server, {username}!** 👋
+
+**Here's a quick to-do list to get you established and familiar with the server!**
+
+1. **Read the Rules**: Please check the {rules_channel} under the info tab
+
+2. **Introduce Yourself**: Go to the {introduction_channel} and tell us a bit about yourself
+
+3. **Be Assigned a Role**: Mods or The Leader will do this, once you have joined
+
+4. **Join the Boi's**: Head over to one of our text channels or voice channels to chat
+
+5. **Check for Events**: In {announcements_channel} we will hold polls and other announcement related things for game night and leveling up
+
+**Bros 4 Life**
+"""
+
+# Event: On Member Join
+@waffle_bot.event
+async def on_member_join(member):
+
+    # Get channels
+    todo_channel = discord.utils.get(member.guild.text_channels, name="to-do")
+    rules_channel = discord.utils.get(member.guild.text_channels, name="rules")
+    introduction_channel = discord.utils.get(member.guild.text_channels, name="introductions")
+    announcements_channel = discord.utils.get(member.guild.text_channels, name="announcements")
+
+    # Format to-do list
+    welcome_message = todo_list.format(
+        username=member.name,
+        rules_channel=f"#{rules_channel.name}" if rules_channel else "",
+        introduction_channel=f"#{introduction_channel.name}" if introduction_channel else "",
+        announcements_channel=f"#{announcements_channel.name}" if announcements_channel else ""
+    )
+
+    # Ping MODS send to to-do channel
+    if todo_channel:
+        mod_role = discord.utils.get(member.guild.roles, name="Mods FEAR THE BOOT 🥾")
+        if mod_role:
+            await todo_channel.send(f"{mod_role.mention} New bro joined: **{member.name}** 👋")
+        await todo_channel.send(welcome_message)
+
+    # Member count number to announcements channel
+    if announcements_channel:
+        member_count = len([m for m in member.guild.members if not m.bot]) # Non-bot members only
+        await announcements_channel.send(f"🎉 We now have **{member_count}** bros in the server!")
+
+# Run Waffle Bot
+TOKEN = 'YOUR_BOT_TOKEN'
+waffle_bot.run(TOKEN)
